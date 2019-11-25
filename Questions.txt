@@ -1,0 +1,5 @@
+25.11.2019
+------------
+Prog: 
+- Wie Git einrichten um Merge-Conflicts zu vermeiden?
+
