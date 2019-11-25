@@ -2,4 +2,5 @@
 ------------
 Prog: 
 - Wie Git einrichten um Merge-Conflicts zu vermeiden?
+- Wie kann ich ein unabhängiges File programmieren, dass im Hintergrund läuft?
 
