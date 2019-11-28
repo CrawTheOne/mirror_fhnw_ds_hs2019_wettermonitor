@@ -1,7 +1,21 @@
-from influxdb import DataFrameClient
 import os
 import subprocess
 from fhnw_ds_hs2019_weatherstation_api import data_import as weather
+
+# define the database connection string
+
+#dynamic host
+#DB_HOST = subprocess.getoutput('hostname')
+DB_HOST = 'localhost'
+DB_PORT = 8086
+DB_DBNAME = 'meteorology'
+stations = ['mythenquai', 'tiefenbrunnen']
+
+print(DB_HOST +":"+str(DB_PORT))
+
+#Datenbank starten
+subprocess.Popen("./influxdb-1.7.8-1/influxd.exe")
+subprocess.Popen("./influxdb-1.7.8-1/influx.exe")
 
 #dynamisch anpassen
 os.chdir("./influxdb-1.7.8-1")
