@@ -1,2 +1,7 @@
 # Default ignored files
 /workspace.xml
+/profiles_settings.xml
+/misc.xml
+/modules.xml
+/vcs.xml
+/wettermonitor.iml
