@@ -1,21 +1,23 @@
 # import the modules
 import pandas as pd
 from influxdb import DataFrameClient, InfluxDBClient
-
+import pytz
 #add pandas version control 0.24
 
-from config import DB_HOST, DB_PORT, DB_DBNAME
+import config
 
-client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
+client = DataFrameClient(host = config.DB_HOST, port = config.DB_PORT, database = config.DB_DBNAME)
 
-#print("Created Mythenquai DataFrame")
-#df_1 = pd.read_csv('./data/messwerte_mythenquai_2019.csv')
-#df_1.info()
+start_time = '2019-10-01T00:00:00+00:00'
+end_time = '2019-11-28T00:00:00+00:00'
 
-#print("Created Tiefenbrunnen DataFrame")
-#df_2 = pd.read_csv('./data/messwerte_tiefenbrunnen_2019.csv')
-#df_2.info()
+# NoSQL Query  (to be added: timezone adjusting)
+query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' "\
+    .format(config.stations[0], config.stations[1], start_time, end_time)
 
-client.get_list_database()
+df_air_temp = client.query(query)
+print(df_air_temp['mythenquai'])
 
-client.switch_database(DB_DBNAME)
+# to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
+mythenquai_nov_dez = pd.DataFrame(df_air_temp['mythenquai'])
+mythenquai_nov_dez.head(3)
