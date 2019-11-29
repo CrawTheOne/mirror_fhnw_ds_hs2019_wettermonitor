@@ -16,8 +16,10 @@ query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' "\
     .format(config.stations[0], config.stations[1], start_time, end_time)
 
 df_air_temp = client.query(query)
-print(df_air_temp['mythenquai'])
 
 # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
 mythenquai_nov_dez = pd.DataFrame(df_air_temp['mythenquai'])
-mythenquai_nov_dez.head(3)
+mythenquai_nov_dez.info()
+
+tiefenbrunnen_nov_dez = pd.DataFrame(df_air_temp['tiefenbrunnen'])
+tiefenbrunnen_nov_dez.info()
