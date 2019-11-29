@@ -1,12 +1,12 @@
 # import the modules
-import pandas as pd
-from influxdb import DataFrameClient, InfluxDBClient
-import pytz
-#add pandas version control 0.24
+    import pandas as pd
+    from influxdb import DataFrameClient, InfluxDBClient
+    import pytz
+    #add pandas version control 0.24
 
-import config
+    import config
 
-client = DataFrameClient(host = config.DB_HOST, port = config.DB_PORT, database = config.DB_DBNAME)
+    client = DataFrameClient(host = config.DB_HOST, port = config.DB_PORT, database = config.DB_DBNAME)
 
 start_time = '2019-10-01T00:00:00+00:00'
 end_time = '2019-11-28T00:00:00+00:00'
