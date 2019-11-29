@@ -6,3 +6,5 @@ DB_DBNAME = 'meteorology'
 stations = ['mythenquai', 'tiefenbrunnen']
 
 print(DB_HOST +":"+str(DB_PORT))
+
+days_delta = 365
