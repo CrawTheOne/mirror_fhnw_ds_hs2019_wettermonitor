@@ -1,6 +1,8 @@
 #dynamic host
 #DB_HOST = subprocess.getoutput('hostname')
 import pandas as pd
+from influxdb import DataFrameClient, InfluxDBClient
+
 DB_HOST = 'localhost'
 DB_PORT = 8086
 DB_DBNAME = 'meteorology'
@@ -12,6 +14,8 @@ days_delta = 365
 
 start_time = '2019-10-01T00:00:00+00:00'
 end_time = '2019-11-28T00:00:00+00:00'
+
+client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
 
 
 class connection:

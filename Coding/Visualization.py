@@ -1,6 +1,16 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
+
+import Import_Data_API
+import DB_Fill
+
+### Get all relevant data objects:
+mythenquai_1d, tiefenbrunnen_1d =Import_Data_API.select_timedelta(0, 1)
+mythenquai-1d_time = 
+
+
 
 external_stylesheets = ['https://codepen.io/chriddyp/pen/bWLwgP.css']
 
@@ -61,10 +71,6 @@ app.layout = html.Div(children=[
         style={'height': 300},
         id='my-graph'
     )
-
-
-
-
 
 
 ])
