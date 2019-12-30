@@ -7,8 +7,8 @@ import Import_Data_API
 import DB_Fill
 
 ### Get all relevant data objects:
-mythenquai_1d, tiefenbrunnen_1d =Import_Data_API.select_timedelta(0, 1)
-mythenquai-1d_time = 
+#mythenquai_1d, tiefenbrunnen_1d =Import_Data_API.select_timedelta(0, 1)
+#mythenquai-1d_time =
 
 
 
@@ -59,7 +59,7 @@ app.layout = html.Div(children=[
                 )
             ],
             layout=dict(
-                title='US Export of Plastic Scrap',
+                title='Lufttemperatur, Entwicklung Wind',
                 showlegend=True,
                 legend=dict(
                     x=0,

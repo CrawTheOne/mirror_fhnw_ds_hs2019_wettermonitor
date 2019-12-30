@@ -58,15 +58,15 @@ def select_timedelta(time_offset_days, time_delta_in_days):
     return df_mythenquai, df_tiefenbrunnen
 
 
-def get_latest_data(time_offset_days, time_delta_in_days):
+def get_latest_data():
     """Make a Select Statement on pass over to new df a certain timedelta from NOW / double_output!: Output1, Output2 = func() /
     example: time_delta_in_days = 10
     Inputs: time_offset_days = 0, time_delta_in_days = 365
     """
     # Set time relative to now for Query (today: 00:00:00)
     now = datetime.datetime.today()
-    start = now - datetime.timedelta(days=time_offset_days)
-    past = now - datetime.timedelta(days=time_delta_in_days)
+    start = now
+    past = now - datetime.timedelta(minutes = 1)
 
     # Set start and end time
     end_time = start.strftime("%Y-%m-%d %H:%M:%S")

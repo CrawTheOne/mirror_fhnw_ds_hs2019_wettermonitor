@@ -15,7 +15,6 @@ def DB_start():
     #dynamisch anpassen des Datenpfads
     os.chdir("./influxdb-1.7.8-1")
 
-
     #define CSV path
     config.historic_data_folder='.'+os.sep+'data'
     #set batch size for DB inserts (decrease for raspberry pi)
@@ -28,12 +27,10 @@ def DB_connect():
     weather.connect_db(config)
 
 def DB_clean():
-
     # clean DB
     weather.clean_db(config)
 
 def DB_import_data():
-
     weather.import_historic_data(config)
     # import latest data (delta between last data point in DB and current time)
     weather.import_latest_data(config, True, True)
