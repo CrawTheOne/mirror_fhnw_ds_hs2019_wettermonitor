@@ -59,30 +59,39 @@ def select_timedelta(time_offset_days, time_delta_in_days):
 
 
 def get_latest_data():
-    """Make a Select Statement on pass over to new df a certain timedelta from NOW / double_output!: Output1, Output2 = func() /
-    example: time_delta_in_days = 10
-    Inputs: time_offset_days = 0, time_delta_in_days = 365
+    """Selects latest row of data.
+    :returns: latest_row of data for mythenquai and for tiefenbrunnen in pandas dataframe format
     """
-    # Set time relative to now for Query (today: 00:00:00)
-    now = datetime.datetime.today()
-    start = now
-    past = now - datetime.timedelta(minutes = 1)
-
-    # Set start and end time
-    end_time = start.strftime("%Y-%m-%d %H:%M:%S")
-    start_time = past.strftime("%Y-%m-%d %H:%M:%S")
-
     # NoSQL Query  (to be added: timezone adjusting)
-    query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' LIMIT 1" \
-        .format(config.stations[0], config.stations[1], start_time, end_time)
+    query = "SELECT LAST(*) from {},{}".format(config.stations[0], config.stations[1])
+
     df_temp = client.query(query)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
     df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
     df_tiefenbrunnen = pd.DataFrame(df_temp['tiefenbrunnen'])
 
-    df_mythenquai = pd.DataFrame(df_mythenquai)
-    df_tiefenbrunnen = pd.DataFrame(df_tiefenbrunnen)
+    return df_mythenquai, df_tiefenbrunnen
+
+def get_wind_data(days):
+    """ Selects all wind_data with given amount of days
+    :param days: Amount of days for data selection
+    :return: dataframes for mythenquai and tiefenbrunnen
+    """
+    df_mythenquai, df_tiefenbrunnen = select_timedelta(0, 7)
+
+    df_mythenquai = pd.concat([df_mythenquai["wind_direction"], df_mythenquai["wind_force_avg_10min"],
+                               df_mythenquai["wind_gust_max_10min"], df_mythenquai["wind_speed_avg_10min"]], axis=1)
+
+    df_tiefenbrunnen = pd.concat([df_mythenquai["wind_direction"], df_mythenquai["wind_force_avg_10min"],
+                                  df_mythenquai["wind_gust_max_10min"], df_mythenquai["wind_speed_avg_10min"]], axis=1)
 
     return df_mythenquai, df_tiefenbrunnen
+
+
+foo, foo1 = get_wind_data(7)
+
+print(foo.columns)
+
+
 

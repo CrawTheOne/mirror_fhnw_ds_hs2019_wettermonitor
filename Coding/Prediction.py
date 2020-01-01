@@ -1,132 +1,72 @@
-%matplotlib inline
-
-import warnings
-import numpy as np
 import pandas as pd
-import scipy.stats as st
-import statsmodels as sm
-import matplotlib
+from influxdb import DataFrameClient, InfluxDBClient
+import seaborn as sns
+import datetime
 import matplotlib.pyplot as plt
+import numpy as np
+from scipy import stats as spstats
 
-matplotlib.rcParams['figure.figsize'] = (16.0, 12.0)
-matplotlib.style.use('ggplot')
 
-# Create models from data
-def best_fit_distribution(data, bins=200, ax=None):
-    """Model data by finding best fit distribution to data"""
-    # Get histogram of original data
-    y, x = np.histogram(data, bins=bins, density=True)
-    x = (x + np.roll(x, -1))[:-1] / 2.0
+df_prediction = pd.read_csv("./influxdb-1.7.8-1/data/messwerte_mythenquai_2007-2018.csv", index_col=0)
+df_pred = df_prediction
+df_pred.index = pd.to_datetime(df_pred.index)
+df_pred = df_pred.loc["2018-01-01":"2018-12-31"]
 
-    # Distributions to check
-    DISTRIBUTIONS = [
-        st.alpha,st.anglit,st.arcsine,st.beta,st.betaprime,st.bradford,st.burr,st.cauchy,st.chi,st.chi2,st.cosine,
-        st.dgamma,st.dweibull,st.erlang,st.expon,st.exponnorm,st.exponweib,st.exponpow,st.f,st.fatiguelife,st.fisk,
-        st.foldcauchy,st.foldnorm,st.frechet_r,st.frechet_l,st.genlogistic,st.genpareto,st.gennorm,st.genexpon,
-        st.genextreme,st.gausshyper,st.gamma,st.gengamma,st.genhalflogistic,st.gilbrat,st.gompertz,st.gumbel_r,
-        st.gumbel_l,st.halfcauchy,st.halflogistic,st.halfnorm,st.halfgennorm,st.hypsecant,st.invgamma,st.invgauss,
-        st.invweibull,st.johnsonsb,st.johnsonsu,st.ksone,st.kstwobign,st.laplace,st.levy,st.levy_l,st.levy_stable,
-        st.logistic,st.loggamma,st.loglaplace,st.lognorm,st.lomax,st.maxwell,st.mielke,st.nakagami,st.ncx2,st.ncf,
-        st.nct,st.norm,st.pareto,st.pearson3,st.powerlaw,st.powerlognorm,st.powernorm,st.rdist,st.reciprocal,
-        st.rayleigh,st.rice,st.recipinvgauss,st.semicircular,st.t,st.triang,st.truncexpon,st.truncnorm,st.tukeylambda,
-        st.uniform,st.vonmises,st.vonmises_line,st.wald,st.weibull_min,st.weibull_max,st.wrapcauchy
-    ]
+def get_values_in_grouped_days(df, column, group_string, group_int):
+    """
+    Splits distributions in separate lists of days together as new list of values. This DF is always used as reference to determine temperature of next day.
+    Input: df = vector or dataframe, column = specific column index, group_string = "3D", "D", group_int = integer days want to group
+    """
 
-    # Best holders
-    best_distribution = st.norm
-    best_params = (0.0, 1.0)
-    best_sse = np.inf
+    df.index = pd.to_datetime(df.index)  ## Index conversion to datetime
 
-    # Estimate distribution parameters from data
-    for distribution in DISTRIBUTIONS:
+    df1 = df.iloc[:, column]
 
-        # Try to fit the distribution
-        try:
-            # Ignore warnings from data that can't be fit
-            with warnings.catch_warnings():
-                warnings.filterwarnings('ignore')
+    grouped_df = df1.resample(group_string).aggregate(lambda tdf: tdf.tolist())  # Creates new df by grouping days
+    grouped_df = pd.DataFrame(grouped_df)
 
-                # fit dist to data
-                params = distribution.fit(data)
+    df2 = df.iloc[:, column]
 
-                # Separate parts of parameters
-                arg = params[:-2]
-                loc = params[-2]
-                scale = params[-1]
+    grouped_df_max = df2.resample("D").aggregate(lambda tdf: tdf.max())
+    grouped_df_max = pd.DataFrame(grouped_df_max)
+    grouped_df_max = grouped_df_max[::group_int].iloc[1:]  ## takes each third row and drops the first one
 
-                # Calculate fitted PDF and error with fit in distribution
-                pdf = distribution.pdf(x, loc=loc, scale=scale, *arg)
-                sse = np.sum(np.power(y - pdf, 2.0))
+    new_df = pd.concat([grouped_df, grouped_df_max], axis=1)
+    new_df = new_df.shift(-1).dropna()
+    new_df.columns = ["grouped_values", "Temp_next_day"]
 
-                # if axis pass in add to plot
-                try:
-                    if ax:
-                        pd.Series(pdf, x).plot(ax=ax)
-                    end
-                except Exception:
-                    pass
+    return new_df
 
-                # identify if this distribution is better
-                if best_sse > sse > 0:
-                    best_distribution = distribution
-                    best_params = params
-                    best_sse = sse
 
-        except Exception:
-            pass
+sample_df = get_values_in_grouped_days(df_pred, 0, "1D", 1)
+sample_df.head()
 
-    return (best_distribution.name, best_params)
 
-def make_pdf(dist, params, size=10000):
-    """Generate distributions's Probability Distribution Function """
+def prediction_ks_test(df_for_test, sample_df):
+    """Predicts the value of next day by using the statistical KS-Test of Scipy package. It's used to compare the distributions of two
+    test samples. The higher the probability value the better is the fit.
+    Input: df_for_test: dataframe of one day to perform the test / sample_df: specific sample df as reference
+    Returns: fitting maximum temperature of next day
+    """
+    KS_p_val_to_compare = 0
+    fitting_temp_next_day = 0
+    iterations = 0  ## length not equal of sample df
 
-    # Separate parts of parameters
-    arg = params[:-2]
-    loc = params[-2]
-    scale = params[-1]
+    for row in range(0, len(sample_df)):
 
-    # Get sane start and end points of distribution
-    start = dist.ppf(0.01, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.01, loc=loc, scale=scale)
-    end = dist.ppf(0.99, *arg, loc=loc, scale=scale) if arg else dist.ppf(0.99, loc=loc, scale=scale)
+        KS_stat, KS_p_val = spstats.ks_2samp(df_for_test.iloc[:, 0], sample_df.iloc[row, 0])  # Perform t-test
 
-    # Build PDF and turn into pandas Series
-    x = np.linspace(start, end, size)
-    y = dist.pdf(x, loc=loc, scale=scale, *arg)
-    pdf = pd.Series(y, x)
+        if KS_p_val > KS_p_val_to_compare:
+            KS_p_val_to_compare = KS_p_val
+            fitting_temp_next_day = sample_df.iloc[row, 1]
 
-    return pdf
+        iterations = iterations + 1
 
-# Load data from statsmodels datasets
-data = pd.Series(sm.datasets.elnino.load_pandas().data.set_index('YEAR').values.ravel())
+        # print("P-Wert: {} / Iterations: {} / Fitting Temp.: {}".format(KS_p_val_to_compare, iterations, fitting_temp_next_day))
 
-# Plot for comparison
-plt.figure(figsize=(12,8))
-ax = data.plot(kind='hist', bins=50, normed=True, alpha=0.5, color=plt.rcParams['axes.color_cycle'][1])
-# Save plot limits
-dataYLim = ax.get_ylim()
+    return fitting_temp_next_day
 
-# Find best fit distribution
-best_fit_name, best_fit_params = best_fit_distribution(data, 200, ax)
-best_dist = getattr(st, best_fit_name)
 
-# Update plots
-ax.set_ylim(dataYLim)
-ax.set_title(u'El Niño sea temp.\n All Fitted Distributions')
-ax.set_xlabel(u'Temp (°C)')
-ax.set_ylabel('Frequency')
 
-# Make PDF with best params
-pdf = make_pdf(best_dist, best_fit_params)
 
-# Display
-plt.figure(figsize=(12,8))
-ax = pdf.plot(lw=2, label='PDF', legend=True)
-data.plot(kind='hist', bins=50, normed=True, alpha=0.5, label='Data', legend=True, ax=ax)
 
-param_names = (best_dist.shapes + ', loc, scale').split(', ') if best_dist.shapes else ['loc', 'scale']
-param_str = ', '.join(['{}={:0.2f}'.format(k,v) for k,v in zip(param_names, best_fit_params)])
-dist_str = '{}({})'.format(best_fit_name, param_str)
-
-ax.set_title(u'El Niño sea temp. with best fit distribution \n' + dist_str)
-ax.set_xlabel(u'Temp. (°C)')
-ax.set_ylabel('Frequency')

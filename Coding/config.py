@@ -15,6 +15,7 @@ days_delta = 365
 start_time = '2019-10-01T00:00:00+00:00'
 end_time = '2019-11-28T00:00:00+00:00'
 
+
 client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
 
 
@@ -43,7 +44,7 @@ class indexing:
         self.df = df
 
     def rowindex_as_col(self, df):
-        """add row index(time) to new column. df = dataframe, name_col = new column name"""
+        "add row index(time) to new column. df = dataframe, name_col = new column name"
         df.index.name = "time"
         df = df.reset_index(inplace = False)
         df = pd.DataFrame(df)
@@ -68,8 +69,8 @@ class time:
         self.df = df
 
     def select_timedelta(self, time_delta_in_days):
-        """Make a Select Statement on pass over to new df a certain timedelta from NOW / double_output!: Output1, Output2 = func() /
-        example: time_delta_in_days = 10"""
+        "Make a Select Statement on pass over to new df a certain timedelta from NOW / double_output!: Output1, Output2 = func() /
+        example: time_delta_in_days = 10"
         # Set time relative to now for Query (today: 00:00:00)
         now = datetime.datetime.today()
         past = now - datetime.timedelta(days=time_delta_in_days)
