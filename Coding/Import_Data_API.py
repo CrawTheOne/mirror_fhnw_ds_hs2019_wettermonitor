@@ -59,19 +59,31 @@ def select_timedelta(time_offset_days, time_delta_in_days):
 
 
 def get_latest_data():
-    """Selects latest row of data.
-    :returns: latest_row of data for mythenquai and for tiefenbrunnen in pandas dataframe format
+    """Make a Select Statement on pass over to new df a certain timedelta from NOW / double_output!: Output1, Output2 = func() /
+    example: time_delta_in_days = 10
+    Inputs: time_offset_days = 0, time_delta_in_days = 365
     """
-    # NoSQL Query  (to be added: timezone adjusting)
-    query = "SELECT LAST(*) from {},{}".format(config.stations[0], config.stations[1])
 
-    df_temp = client.query(query)
+    # NoSQL Query  (to be added: timezone adjusting)
+    query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
+
+    df_temp = client.query(query1)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
     df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
     df_tiefenbrunnen = pd.DataFrame(df_temp['tiefenbrunnen'])
 
-    return df_mythenquai, df_tiefenbrunnen
+    df_mythenquai = df_mythenquai.iloc[:, [0, 1, 2, 4]]
+    df_tiefenbrunnen = df_tiefenbrunnen.iloc[:, 4]
+
+    df_adapt = pd.concat([df_mythenquai, df_tiefenbrunnen], axis=1)
+    df_adapt.columns = ["Lufttemperatur", "Luftdruck", "Taupunkt", "Luftfeuchtigkeit", "Wassertemperatur"]
+    df_adapt = df_adapt.reset_index(drop=True)
+    df_adapt = df_adapt.T
+    df_adapt = df_adapt
+
+    return df_adapt
+
 
 def get_wind_data(days):
     """ Selects all wind_data with given amount of days
@@ -88,10 +100,6 @@ def get_wind_data(days):
 
     return df_mythenquai, df_tiefenbrunnen
 
-
-foo, foo1 = get_wind_data(7)
-
-print(foo.columns)
 
 
 

@@ -3,6 +3,7 @@
 import pandas as pd
 from influxdb import DataFrameClient, InfluxDBClient
 
+## Database information
 DB_HOST = 'localhost'
 DB_PORT = 8086
 DB_DBNAME = 'meteorology'
@@ -10,13 +11,16 @@ stations = ['mythenquai', 'tiefenbrunnen']
 
 print(DB_HOST +":"+str(DB_PORT))
 
+client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
+
+####
 days_delta = 365
 
 start_time = '2019-10-01T00:00:00+00:00'
 end_time = '2019-11-28T00:00:00+00:00'
 
 
-client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
+
 
 
 class connection:

@@ -1,6 +1,7 @@
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+import dash_table
 from dash.dependencies import Output, Input
 import datetime
 import plotly.graph_objects as go
@@ -14,18 +15,31 @@ wind_data_days = 7
 df_wind_week_mythenquai, df_wind_week_tiefenbrunnen = ImpData.get_wind_data(wind_data_days)
 df_wind_week_mythenquai, df_wind_week_tiefenbrunnen = df_wind_week_mythenquai.iloc[
                                                           ::4], df_wind_week_tiefenbrunnen.iloc[::4]
+df_latest_data = ImpData.get_latest_data()
 
 ### Plot Wind
 ### Define Plots
 
 
+## Format data
+app = dash.Dash(__name__,external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
+colors = {'text': '##b4c4de'
+          }
+background_image_local = "url(/assets/sailing_picture.jpg)"
 
-app = dash.Dash(__name__)
 
-app.layout = html.Div([
-    html.H1(children = "Wettermonitor"),
+
+app.layout = html.Div(style={"background-image": background_image_local,
+                             "background-size": "1080px 1350px",
+                             "background-repeat": "no-repeat"
+                             },
+                      children = [
+    html.H1("Willkommen am Pier!", style={'textAlign': 'center',
+                                          'color': colors['text']
+                                          }
+    ),
     html.Label(
-        "Zeit: {}".format(datetime.datetime.strftime(datetime.datetime.now(), format = "%Y-%m-%d %H:%M")
+        "Letztes Update : {}".format(datetime.datetime.strftime(datetime.datetime.now(), format = "%Y-%m-%d %H:%M")
                           )
     ),
     html.Div(
@@ -33,33 +47,28 @@ app.layout = html.Div([
                                 {"label":"Windgeschwindigkeit", "value": "wind_speed_avg_10min"},
                                 {"label":"Windkraft", "value":"wind_force_avg_10min"},
                                 {"label":"Windböen", "value":"wind_gust_max_10min"}]
+
                      )
     ),
     html.Div(
         dcc.Graph(id = "Wind_Chart")
     ),
     html.Div(
-        html.Img(
-            src = "/Assets/sailing_picture.jpg")
+        dash_table.DataTable(
+            id = 'df_latest_data',
+            columns = [{"name": i, "id": i} for i in df_latest_data.columns],
+            data = df_latest_data.to_dict('records'),
+        ),
     ),
     html.Div(
-        go.Table(
-            header=dict(values=['A Scores', 'B Scores'],
-                    line = dict(color='#7D7F80'),
-                    fill = dict(color='#a1c3d1'),
-                    align = ['left'] * 5),
-                    cells=dict(values=[[100, 90, 80, 90],
-                           [95, 85, 75, 95]],
-                    line = dict(color='#7D7F80'),
-                    fill = dict(color='#EDFAFF'),
-                    align = ['left'] * 5)
+        html.Label(
+            "Mast und Schotbruch!", style={'textAlign': 'center',
+                                          'color': colors['text']
+                                          }
             )
-    )
-
-
-])
-
-#app.css.append_css({"external_url" : "https://codepen.io/chriddyp/pen/bWLwgP.css"})
+        )
+    ]
+)
 
 
 @app.callback(dash.dependencies.Output("Wind_Chart", "figure"),
