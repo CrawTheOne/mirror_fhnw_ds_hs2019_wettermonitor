@@ -77,12 +77,34 @@ def get_latest_data():
     df_tiefenbrunnen = df_tiefenbrunnen.iloc[:, 4]
 
     df_adapt = pd.concat([df_mythenquai, df_tiefenbrunnen], axis=1)
-    df_adapt.columns = ["Lufttemperatur", "Luftdruck", "Taupunkt", "Luftfeuchtigkeit", "Wassertemperatur"]
+    df_adapt.columns = ["Lufttemperatur(°C)", "Luftdruck(hPa)", "Taupunkt(°C)", "Luftfeuchtigkeit(%)", "Wassertemperatur(°C)"]
     df_adapt = df_adapt.reset_index(drop=True)
     df_adapt = df_adapt.T
-    df_adapt = df_adapt
+    df_adapt = df_adapt.reset_index()
+    df_adapt.columns = ["Messgrösse","Messwerte"]
 
     return df_adapt
+
+
+
+def get_last_wind_direction():
+    """
+
+    :return:
+    """
+    query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
+
+    df_temp = client.query(query1)
+
+    # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
+    df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
+    df_tiefenbrunnen = pd.DataFrame(df_temp['tiefenbrunnen'])
+
+    df_wind_direction_mythenquai = df_mythenquai.iloc[:,[8, 11]]
+    df_wind_direction_tiefenbrunnen = df_tiefenbrunnen.iloc[:,[5, 8]]
+
+    return df_wind_direction_mythenquai, df_wind_direction_tiefenbrunnen
+
 
 
 def get_wind_data(days):
@@ -99,7 +121,4 @@ def get_wind_data(days):
                                   df_mythenquai["wind_gust_max_10min"], df_mythenquai["wind_speed_avg_10min"]], axis=1)
 
     return df_mythenquai, df_tiefenbrunnen
-
-
-
 

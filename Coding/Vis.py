@@ -2,13 +2,15 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_table
-from dash.dependencies import Output, Input
 import datetime
+from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import Import_Data_API as ImpData
+import Prediction as pred
 
 ### Set all parameters
 wind_data_days = 7
+table_update_seconds = 600
 
 
 ### Get all relevant data
@@ -17,84 +19,215 @@ df_wind_week_mythenquai, df_wind_week_tiefenbrunnen = df_wind_week_mythenquai.il
                                                           ::4], df_wind_week_tiefenbrunnen.iloc[::4]
 df_latest_data = ImpData.get_latest_data()
 
-### Plot Wind
-### Define Plots
+
+#df_for_test = ImpData.select_timedelta()
+#sample_df = pred.get_values_in_grouped_days()
+#prediction_4_tmrw = pred.prediction_ks_test( , sample_df)
+
+
+
 
 
 ## Format data
 app = dash.Dash(__name__,external_stylesheets=['https://codepen.io/chriddyp/pen/bWLwgP.css'])
-colors = {'text': '##b4c4de'
-          }
-background_image_local = "url(/assets/sailing_picture.jpg)"
+colors = {'text': '##b4c4de'}
 
 
-
-app.layout = html.Div(style={"background-image": background_image_local,
-                             "background-size": "1080px 1350px",
-                             "background-repeat": "no-repeat"
-                             },
-                      children = [
-    html.H1("Willkommen am Pier!", style={'textAlign': 'center',
+app.layout = html.Div(
+    children = [
+            html.H1(
+                "Willkommen am Pier!", style={'textAlign': 'center',
                                           'color': colors['text']
                                           }
-    ),
-    html.Label(
-        "Letztes Update : {}".format(datetime.datetime.strftime(datetime.datetime.now(), format = "%Y-%m-%d %H:%M")
-                          )
-    ),
-    html.Div(
-        dcc.Dropdown(id = "wind_input", options = [
+                ),
+            html.Div(id='live-update-text',
+                style={'font-size': '15px'}),
+            dcc.Interval(
+                id='interval-component',
+                interval= table_update_seconds*1000, # in milliseconds
+                n_intervals=0
+            ),
+            html.Div([
+                html.Div([
+                    dcc.Dropdown(id = "wind_input", options = [
                                 {"label":"Windgeschwindigkeit", "value": "wind_speed_avg_10min"},
                                 {"label":"Windkraft", "value":"wind_force_avg_10min"},
-                                {"label":"Windböen", "value":"wind_gust_max_10min"}]
-
-                     )
-    ),
-    html.Div(
-        dcc.Graph(id = "Wind_Chart")
-    ),
-    html.Div(
-        dash_table.DataTable(
-            id = 'df_latest_data',
-            columns = [{"name": i, "id": i} for i in df_latest_data.columns],
-            data = df_latest_data.to_dict('records'),
-        ),
-    ),
-    html.Div(
-        html.Label(
-            "Mast und Schotbruch!", style={'textAlign': 'center',
-                                          'color': colors['text']
-                                          }
+                                {"label":"Windböen", "value":"wind_gust_max_10min"}],
+                                value = "wind_speed_avg_10min"
+                    ),
+                    dcc.Graph(
+                        id = "Wind_Chart"
+                    ),
+                    dcc.Interval(
+                        id='wind_update',
+                        interval = table_update_seconds * 1000,  # in milliseconds
+                        n_intervals = 0
+                    )
+                ],
+                    className= "six columns"
+                ),
+                html.Div(
+                    [
+                    html.Div(
+                        dash_table.DataTable(
+                            id='df_latest_data',
+                            columns=[{"name": i, "id": i} for i in df_latest_data.columns],
+                            data = df_latest_data.to_dict('records'),
+                            style_header={
+                                    'backgroundColor': 'white',
+                                    'fontWeight': 'bold'
+                            },
+                            style_cell_conditional=[
+                                    {'if': {'column_id': ''},
+                                    'width': '50%'},
+                                    {'if': {'column_id': 'Werte'},
+                                    'width': '50%'}
+                            ],
+                        )
+                    ),
+                        dcc.Interval(
+                            id='interval_component_table',
+                            interval = table_update_seconds * 1000,  # in milliseconds
+                            n_intervals = 0
+                        ),
+                        html.H5(
+                            "Windrichtung in Grad°",
+                            style={"postion": "center"}
+                        ),
+                        html.Label(
+                            "0° ist Norden"
+                        ),
+                        dcc.Graph(
+                            id="wind-direction",
+                            figure=dict(
+                                layout=dict(
+                                plot_bgcolor="white",
+                                paper_bgcolor="grey",
+                                )
+                            )
+                        ),
+                        dcc.Interval(
+                            id='wind_direction_update',
+                            interval = table_update_seconds * 1000,  # in milliseconds
+                            n_intervals = 0
+                        )
+                    ], className="six columns"
+                    )
+                    ])
+                ]
             )
-        )
-    ]
-)
+
+
+
+@app.callback(Output('live-update-text', 'children'),
+              [Input('interval-component', 'n_intervals')])
+def update_date(n):
+
+    date_now = datetime.datetime.now()
+    date_now = datetime.datetime.strftime(date_now, format = "%Y-%m-%d %H:%M")
+
+    return [html.P('Last updated: {} '.format(date_now))]
 
 
 @app.callback(dash.dependencies.Output("Wind_Chart", "figure"),
-              [dash.dependencies.Input("wind_input", "value")])
-def update_wind(input_value):
+              [dash.dependencies.Input("wind_input", "value"),
+               dash.dependencies.Input("wind_update", "n_intervals")])
+def update_wind(input_value, n):
     ### Define Plots
-    wind_data = go.Scatter(x=df_wind_week_mythenquai.index,
-                           y=df_wind_week_mythenquai[input_value],
-                           name="Winddaten", line=dict(color="#A9E2F3"))
 
-    plot_wind = [wind_data]
+    update_wind, update_wind2 = ImpData.get_wind_data(wind_data_days)
+    update_wind, update_wind2 = update_wind.iloc[::10], update_wind2.iloc[::10]
 
-    if input_value == "wind_speed_avg_10min":
-        layout_wind = dict(title="Windgeschwindigkeit in km/h")
-    if input_value == "wind_force_avg_10min":
-        layout_wind = dict(title = "Windkraft in Newton")
-    if input_value == "wind_gust_max_10min":
-        layout_wind = dict(title = "Windböen")
+    wind_data1 = go.Scatter(x=update_wind.index,
+                           y=update_wind[input_value],
+                           name="Mythenquai", line=dict(color="#69c1ff"))
+    wind_data2 = go.Scatter(x=update_wind2.index,
+                           y=update_wind2[input_value],
+                           name="Tiefenbrunnen", line=dict(color="#ff9869"))
 
-    figure = dict(data=plot_wind, layout=layout_wind)
+    plot_wind = [wind_data1, wind_data2]
+
+    if "wind_speed" in input_value:
+        layout_wind = dict(title="Windgeschwindigkeit in (m/s)")
+    if "wind_force" in input_value:
+        layout_wind = dict(title = "Windkraft nach Belfort")
+    if "wind_gust" in input_value:
+        layout_wind = dict(title = "Windböen (m/s)")
+
+
+    figure = dict(data=plot_wind, layout = layout_wind)
 
     return figure
+
+
+@app.callback(
+        dash.dependencies.Output('df_latest_data', 'data'),
+        [dash.dependencies.Input('interval_component_table', 'n_intervals')]
+        )
+def updateTable(n):
+     """
+     calling the get data function
+     """
+     updated_data = ImpData.get_latest_data()
+
+     return updated_data.to_dict('records')
+
+
+
+
+@app.callback(
+    Output("wind-direction", "figure"),
+    [Input("wind_direction_update", "n_intervals")]
+)
+def gen_wind_direction(interval):
+    """
+    Generate the wind direction graph.
+    :params interval: update the graph based on an interval
+    """
+
+    wind_direction_mq, wind_direction_tb = ImpData.get_last_wind_direction()
+
+    val = wind_direction_mq.iloc[0, 1] * 3.6
+
+    direction = [0, (wind_direction_mq.iloc[0,0] - 20), (wind_direction_mq.iloc[0,0] + 20), 0]
+
+    traces_scatterpolar = [
+        {"r": [0, val, val, 0], "fillcolor": "#084E8A"},
+        {"r": [0, val * 0.65, val * 0.65, 0], "fillcolor": "#B4E1FA"},
+        {"r": [0, val * 0.3, val * 0.3, 0], "fillcolor": "#EBF5FA"},
+    ]
+
+    data = [
+        dict(
+            type="scatterpolar",
+            r=traces["r"],
+            theta=direction,
+            mode="lines",
+            fill="toself",
+            fillcolor=traces["fillcolor"],
+            line={"color": "rgba(32, 32, 32, .6)", "width": 1},
+        )
+        for traces in traces_scatterpolar
+    ]
+
+    layout = dict(
+        height=400,
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+        font={"color": "black"},
+        autosize=False,
+        polar={
+            "bgcolor": "white",
+            "radialaxis": {"range": [0, 45], "angle": 45, "dtick": 10},
+            "angularaxis": {"showline": False, "tickcolor": "white"},
+        },
+        showlegend=False,
+    )
+
+    return dict(data=data, layout=layout)
 
 
 
 if __name__ == '__main__':
     app.run_server(debug=True)
-
 

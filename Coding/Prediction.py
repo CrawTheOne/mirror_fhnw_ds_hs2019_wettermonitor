@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import stats as spstats
 
-
 df_prediction = pd.read_csv("./influxdb-1.7.8-1/data/messwerte_mythenquai_2007-2018.csv", index_col=0)
 df_pred = df_prediction
 df_pred.index = pd.to_datetime(df_pred.index)
@@ -39,7 +38,7 @@ def get_values_in_grouped_days(df, column, group_string, group_int):
 
 
 sample_df = get_values_in_grouped_days(df_pred, 0, "1D", 1)
-sample_df.head()
+#sample_df.head()
 
 
 def prediction_ks_test(df_for_test, sample_df):
