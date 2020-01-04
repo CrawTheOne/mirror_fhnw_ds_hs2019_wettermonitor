@@ -1,13 +1,10 @@
 # import the modules
-import pandas as pd
-from influxdb import DataFrameClient, InfluxDBClient
-import pytz
 import datetime
 import config as cfg
 import pandas as pd #add pandas version control 0.24
 
 ## Dataframe client used
-client = DataFrameClient(host = cfg.DB_HOST, port = cfg.DB_PORT, database = cfg.DB_DBNAME)
+#client = DataFrameClient(host = cfg.DB_HOST, port = cfg.DB_PORT, database = cfg.DB_DBNAME)
 
 
 # NoSQL Query  (to be added: timezone adjusting)
@@ -22,7 +19,7 @@ def DB_query_data(start_time, end_time):
     query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' "\
         .format(cfg.stations[0], cfg.stations[1], cfg.start_time, cfg.end_time)
 
-    df_query = client.query(query)
+    df_query = cfg.client.query(query)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
     df_mythenquai = pd.DataFrame(df_query['mythenquai'])
@@ -49,7 +46,7 @@ def select_timedelta(time_offset_days, time_delta_in_days):
     # NoSQL Query  (to be added: timezone adjusting)
     query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' " \
         .format(cfg.stations[0], cfg.stations[1], start_time, end_time)
-    df_temp = client.query(query)
+    df_temp = cfg.client.query(query)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
     df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
@@ -67,7 +64,7 @@ def get_latest_data():
     # NoSQL Query  (to be added: timezone adjusting)
     query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
 
-    df_temp = client.query(query1)
+    df_temp = cfg.client.query(query1)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
     df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
@@ -88,13 +85,12 @@ def get_latest_data():
 
 
 def get_last_wind_direction():
-    """
-
-    :return:
+    """ Outputs the last Wind direction measured in both stations. It is used for the dashboard
+    :return: Wind direction of both stations
     """
     query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
 
-    df_temp = client.query(query1)
+    df_temp = cfg.client.query(query1)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
     df_mythenquai = pd.DataFrame(df_temp['mythenquai'])

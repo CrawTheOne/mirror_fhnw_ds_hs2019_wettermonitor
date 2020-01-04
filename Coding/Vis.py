@@ -6,26 +6,14 @@ import datetime
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import Import_Data_API as ImpData
-import Prediction as pred
+import config as cfg
 
 ### Set all parameters
-wind_data_days = 7
-table_update_seconds = 600
-
+wind_data_days = cfg.wind_data_days
+table_update_seconds = cfg.table_update_seconds
 
 ### Get all relevant data
-df_wind_week_mythenquai, df_wind_week_tiefenbrunnen = ImpData.get_wind_data(wind_data_days)
-df_wind_week_mythenquai, df_wind_week_tiefenbrunnen = df_wind_week_mythenquai.iloc[
-                                                          ::4], df_wind_week_tiefenbrunnen.iloc[::4]
 df_latest_data = ImpData.get_latest_data()
-
-
-#df_for_test = ImpData.select_timedelta()
-#sample_df = pred.get_values_in_grouped_days()
-#prediction_4_tmrw = pred.prediction_ks_test( , sample_df)
-
-
-
 
 
 ## Format data
@@ -92,10 +80,17 @@ app.layout = html.Div(
                         ),
                         html.H5(
                             "Windrichtung in Grad°",
-                            style={"postion": "center"}
+                            style={
+                                'textAlign': 'center',
+                                'color': colors['text']
+                            }
                         ),
                         html.Label(
-                            "0° ist Norden"
+                            "0° ist Norden",
+                            style={
+                                'textAlign': 'center',
+                                'color': colors['text']
+                            }
                         ),
                         dcc.Graph(
                             id="wind-direction",

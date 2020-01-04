@@ -1,7 +1,4 @@
-#dynamic host
-#DB_HOST = subprocess.getoutput('hostname')
-import pandas as pd
-from influxdb import DataFrameClient, InfluxDBClient
+from influxdb import DataFrameClient
 
 ## Database information
 DB_HOST = 'localhost'
@@ -11,15 +8,19 @@ stations = ['mythenquai', 'tiefenbrunnen']
 
 print(DB_HOST +":"+str(DB_PORT))
 
+### Import Data_API (data import)
 client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
-
-####
 days_delta = 365
 
 start_time = '2019-10-01T00:00:00+00:00'
 end_time = '2019-11-28T00:00:00+00:00'
 
+### Prediction.py (Prediction-file)
+prediction_file_path = "./influxdb-1.7.8-1/data/messwerte_mythenquai_2007-2018.csv"
 
+### Vis.py (Visualization Parameters)
+wind_data_days = 7
+table_update_seconds = 600
 
 
 
