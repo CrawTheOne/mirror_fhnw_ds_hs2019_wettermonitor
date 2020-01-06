@@ -49,8 +49,8 @@ def select_timedelta(time_offset_days, time_delta_in_days):
     df_temp = cfg.client.query(query)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
-    df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
-    df_tiefenbrunnen = pd.DataFrame(df_temp['tiefenbrunnen'])
+    df_mythenquai = pd.DataFrame(df_temp[cfg.stations[0]])
+    df_tiefenbrunnen = pd.DataFrame(df_temp[cfg.stations[1]])
 
     return df_mythenquai, df_tiefenbrunnen
 
@@ -67,8 +67,8 @@ def get_latest_data():
     df_temp = cfg.client.query(query1)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
-    df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
-    df_tiefenbrunnen = pd.DataFrame(df_temp['tiefenbrunnen'])
+    df_mythenquai = pd.DataFrame(df_temp[cfg.stations[0]])
+    df_tiefenbrunnen = pd.DataFrame(df_temp[cfg.stations[1]])
 
     df_mythenquai = df_mythenquai.iloc[:, [0, 1, 2, 4]]
     df_tiefenbrunnen = df_tiefenbrunnen.iloc[:, 4]
@@ -93,8 +93,8 @@ def get_last_wind_direction():
     df_temp = cfg.client.query(query1)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
-    df_mythenquai = pd.DataFrame(df_temp['mythenquai'])
-    df_tiefenbrunnen = pd.DataFrame(df_temp['tiefenbrunnen'])
+    df_mythenquai = pd.DataFrame(df_temp[cfg.stations[0]])
+    df_tiefenbrunnen = pd.DataFrame(df_temp[cfg.stations[1]])
 
     df_wind_direction_mythenquai = df_mythenquai.iloc[:,[8, 11]]
     df_wind_direction_tiefenbrunnen = df_tiefenbrunnen.iloc[:,[5, 8]]
