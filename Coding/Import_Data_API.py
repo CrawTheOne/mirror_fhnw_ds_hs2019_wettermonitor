@@ -3,9 +3,6 @@ import datetime
 import config as cfg
 import pandas as pd #add pandas version control 0.24
 
-## Dataframe client used
-#client = DataFrameClient(host = cfg.DB_HOST, port = cfg.DB_PORT, database = cfg.DB_DBNAME)
-
 
 # NoSQL Query  (to be added: timezone adjusting)
 def DB_query_data(start_time, end_time):
@@ -16,8 +13,11 @@ def DB_query_data(start_time, end_time):
     :param end_time: '2019-12-28T00:00:00+00:00'
     :return: df_mythenquai, df_tiefenbrunnen
     """
-    query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' "\
-        .format(cfg.stations[0], cfg.stations[1], cfg.start_time, cfg.end_time)
+
+    if len(cfg.stations) == 2:
+        query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' " \
+            .format(cfg.stations[0], cfg.stations[1], cfg.start_time, cfg.end_time)
+
 
     df_query = cfg.client.query(query)
 
@@ -37,15 +37,17 @@ def select_timedelta(time_offset_days, time_delta_in_days):
     # Set time relative to now for Query (today: 00:00:00)
     now = datetime.datetime.today()
     start = now - datetime.timedelta(days=time_offset_days)
-    past = now - datetime.timedelta(days=time_delta_in_days)
+    past = start - datetime.timedelta(days=time_delta_in_days)
 
     # Set start and end time
     end_time = start.strftime("%Y-%m-%d %H:%M:%S")
     start_time = past.strftime("%Y-%m-%d %H:%M:%S")
 
     # NoSQL Query  (to be added: timezone adjusting)
-    query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' " \
-        .format(cfg.stations[0], cfg.stations[1], start_time, end_time)
+    if len(cfg.stations) == 2:
+        query = "SELECT * FROM \"{}\",\"{}\" WHERE time >= '{}' AND time <= '{}' " \
+            .format(cfg.stations[0], cfg.stations[1], start_time, end_time)
+
     df_temp = cfg.client.query(query)
 
     # to create pandas df, use only one dicitonary part (mythenquai, tiefenbrunnen)
@@ -55,6 +57,7 @@ def select_timedelta(time_offset_days, time_delta_in_days):
     return df_mythenquai, df_tiefenbrunnen
 
 
+
 def get_latest_data():
     """Make a Select Statement on pass over to new df a certain timedelta from NOW / double_output!: Output1, Output2 = func() /
     example: time_delta_in_days = 10
@@ -62,7 +65,8 @@ def get_latest_data():
     """
 
     # NoSQL Query  (to be added: timezone adjusting)
-    query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
+    if len(cfg.stations) == 2:
+        query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
 
     df_temp = cfg.client.query(query1)
 
@@ -88,7 +92,8 @@ def get_last_wind_direction():
     """ Outputs the last Wind direction measured in both stations. It is used for the dashboard
     :return: Wind direction of both stations
     """
-    query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
+    if len(cfg.stations) == 2:
+        query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
 
     df_temp = cfg.client.query(query1)
 
@@ -117,4 +122,35 @@ def get_wind_data(days):
                                   df_mythenquai["wind_gust_max_10min"], df_mythenquai["wind_speed_avg_10min"]], axis=1)
 
     return df_mythenquai, df_tiefenbrunnen
+
+
+
+def select_timedelta_ext(time_offset_days, time_delta_in_days, client):
+    """Make a Select Statement on pass over to new df a certain timedelta from NOW.
+    Special function for multiple station entries in the config file .
+    Output: A list of Dataframes
+    example: time_delta_in_days = 365
+    Inputs: time_offset_days = 0, time_delta_in_days = 365, client = cfg.client (DataframeClient)
+    """
+    df_list = []
+
+    # Set time relative to now for Query (today: 00:00:00)
+    now = datetime.datetime.today()
+    start = now - datetime.timedelta(days=time_offset_days)
+    past = start - datetime.timedelta(days=time_delta_in_days)
+
+    # Set start and end time
+    end_time = start.strftime("%Y-%m-%d %H:%M:%S")
+    start_time = past.strftime("%Y-%m-%d %H:%M:%S")
+
+    # NoSQL Query  (to be added: timezone adjusting)
+    for station in cfg.stations:
+        query = "SELECT * FROM {} WHERE time >= '{}' AND time <= '{}' " .format(station, start_time, end_time)
+        df_temp = client.query(query)
+        df_temp = pd.DataFrame(df_temp[station])
+        df_list.append(df_temp)
+
+    return df_list
+
+
 

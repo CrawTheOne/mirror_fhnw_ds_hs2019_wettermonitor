@@ -5,11 +5,21 @@ DB_HOST = 'localhost'
 DB_PORT = 8086
 DB_DBNAME = 'meteorology'
 stations = ['mythenquai', 'tiefenbrunnen']
+client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
+
+## Erweiterte Datenqelle
+DB_HOST_ext = ""
+DB_PORT_ext = ""
+DB_DBNAME_ext = ""
+stations_ext = []
+client_ext = DataFrameClient("host = DB_HOST, port = DB_PORT, database = DB_DBNAME")
+
+
 
 print(DB_HOST +":"+str(DB_PORT))
 
 ### Import Data_API (data import)
-client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
+
 days_delta = 365
 
 start_time = '2019-10-01T00:00:00+00:00'
