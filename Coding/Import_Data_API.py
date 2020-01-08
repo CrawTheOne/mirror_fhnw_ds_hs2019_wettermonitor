@@ -65,8 +65,7 @@ def get_latest_data():
     """
 
     # NoSQL Query  (to be added: timezone adjusting)
-    if len(cfg.stations) == 2:
-        query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
+    query1 = "SELECT LAST(*) from {},{}".format(cfg.stations[0], cfg.stations[1])
 
     df_temp = cfg.client.query(query1)
 
@@ -125,12 +124,11 @@ def get_wind_data(days):
 
 
 
-def select_timedelta_ext(time_offset_days, time_delta_in_days, client):
-    """Make a Select Statement on pass over to new df a certain timedelta from NOW.
-    Special function for multiple station entries in the config file .
-    Output: A list of Dataframes
-    example: time_delta_in_days = 365
-    Inputs: time_offset_days = 0, time_delta_in_days = 365, client = cfg.client (DataframeClient)
+def select_timedelta_ext(time_offset_days, time_delta_in_days, client, station):
+    """This functino provides data with a given timedelta for the selection.
+    :parameter: time_offset_days = offset time from now / time_delta_in_days = how much days to select from offset time /
+                client = database client / station = list of station to be queried
+    :returns: Output: A list of Dataframes of the given client and station
     """
     df_list = []
 
@@ -144,7 +142,7 @@ def select_timedelta_ext(time_offset_days, time_delta_in_days, client):
     start_time = past.strftime("%Y-%m-%d %H:%M:%S")
 
     # NoSQL Query  (to be added: timezone adjusting)
-    for station in cfg.stations:
+    for station in station:
         query = "SELECT * FROM {} WHERE time >= '{}' AND time <= '{}' " .format(station, start_time, end_time)
         df_temp = client.query(query)
         df_temp = pd.DataFrame(df_temp[station])
@@ -154,3 +152,28 @@ def select_timedelta_ext(time_offset_days, time_delta_in_days, client):
 
 
 
+def get_latest_data_ext(client, stations):
+    """This function is in order to query data with an extended datasource. The data won't be formatted as in the function with the given functions,
+    because from this instant its's not clear which attributes or column names are available in the new datasource. This function queries data and
+    gives back a dataframe which consists of a pandas formatted dataframe of the newest row of the source.
+    :parameter
+    :returns
+    """
+    df_list = []
+
+    # NoSQL Query  (to be added: timezone adjusting)
+    if cfg.ext_datasource == False:
+        print("No external data source given which is required for this SELECT function to perform. Please make sure using the correct Stations")
+
+    #else:
+    for station in stations:
+        query = "SELECT LAST(*) from {}".format(station)
+        df_temp = client.query(query)
+        df_temp = pd.DataFrame(df_temp[station])
+        df_list.append(df_temp)
+
+    return df_list
+
+foo = get_latest_data()
+
+print(foo.tail(10))

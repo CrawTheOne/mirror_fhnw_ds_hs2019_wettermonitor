@@ -8,12 +8,12 @@ stations = ['mythenquai', 'tiefenbrunnen']
 client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
 
 ## Erweiterte Datenqelle
-DB_HOST_ext = ""
-DB_PORT_ext = ""
-DB_DBNAME_ext = ""
-stations_ext = []
-client_ext = DataFrameClient("host = DB_HOST, port = DB_PORT, database = DB_DBNAME")
-
+ext_datasource = False
+DB_HOST_ext = "localhost"
+DB_PORT_ext = 8086
+DB_DBNAME_ext = "meteorology"
+stations_ext = ["mythenquai"]
+client_ext = DataFrameClient(host = DB_HOST_ext, port = DB_PORT_ext, database = DB_DBNAME_ext)
 
 
 print(DB_HOST +":"+str(DB_PORT))
