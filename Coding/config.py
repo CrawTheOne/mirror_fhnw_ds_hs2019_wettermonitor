@@ -22,8 +22,8 @@ print(DB_HOST +":"+str(DB_PORT))
 
 days_delta = 365
 
-start_time = '2019-10-01T00:00:00+00:00'
-end_time = '2019-11-28T00:00:00+00:00'
+start_time = '2019-10-01T00:00:00+00:00' #datetime.datetime.now() - #adtetime.timedelta(days = days_delta)
+end_time = '2019-11-28T00:00:00+00:00' #datetime.datetime.now()
 
 ### Prediction.py (Prediction-file)
 prediction_file_path = "./influxdb-1.7.8-1/data/messwerte_mythenquai_2007-2018.csv"
@@ -32,16 +32,7 @@ prediction_file_path = "./influxdb-1.7.8-1/data/messwerte_mythenquai_2007-2018.c
 wind_data_days = 7
 table_update_seconds = 600
 
-
-
-class connection:
-
-    def __init__(self, name):
-        self.name = name
-
-    def change_name(self, new_name):
-        self.name = new_name
-
+#attempt at object oriented programming, scraped for insufficient time
 """
 class connection:
 
