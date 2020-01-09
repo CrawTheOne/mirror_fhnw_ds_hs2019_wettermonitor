@@ -173,7 +173,3 @@ def get_latest_data_ext(client, stations):
         df_list.append(df_temp)
 
     return df_list
-
-foo = get_latest_data()
-
-print(foo.tail(10))
