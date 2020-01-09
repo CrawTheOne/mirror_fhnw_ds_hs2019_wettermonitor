@@ -7,7 +7,7 @@ DB_DBNAME = 'meteorology'
 stations = ['mythenquai', 'tiefenbrunnen']
 client = DataFrameClient(host = DB_HOST, port = DB_PORT, database = DB_DBNAME)
 
-## Erweiterte Datenqelle
+## Erweiterte Datenquelle
 ext_datasource = False
 DB_HOST_ext = "localhost"
 DB_PORT_ext = 8086
@@ -22,7 +22,8 @@ print(DB_HOST +":"+str(DB_PORT))
 
 days_delta = 365
 
-start_time = '2019-10-01T00:00:00+00:00' #datetime.datetime.now() - #adtetime.timedelta(days = days_delta)
+start_time = '2019-10-01T00:00:00+00:00' #datetime.datetime.now()  datetime.timedelta(days=days_delta)
+
 end_time = '2019-11-28T00:00:00+00:00' #datetime.datetime.now()
 
 ### Prediction.py (Prediction-file)
@@ -32,7 +33,7 @@ prediction_file_path = "./influxdb-1.7.8-1/data/messwerte_mythenquai_2007-2018.c
 wind_data_days = 7
 table_update_seconds = 600
 
-#attempt at object oriented programming, scraped for insufficient time
+#attempt at object oriented coding, scraped for insufficient time
 """
 class connection:
 
